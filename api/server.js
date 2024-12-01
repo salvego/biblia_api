@@ -1,37 +1,31 @@
-const jsonServer = require('json-server');
-const fs = require('fs');
-const path = require('path');
+// See https://github.com/typicode/json-server#module
+const jsonServer = require('json-server')
 
-const server = jsonServer.create();
-const middlewares = jsonServer.defaults();
+const server = jsonServer.create()
 
-server.use(middlewares);
+// Uncomment to allow write operations
+// const fs = require('fs')
+// const path = require('path')
+// const filePath = path.join('db.json')
+// const data = fs.readFileSync(filePath, "utf-8");
+// const db = JSON.parse(data);
+// const router = jsonServer.router(db)
 
-// Lê todos os arquivos JSON dentro da pasta `biblia`
-const dirPath = path.join(__dirname, 'biblia');
-const routers = fs.readdirSync(dirPath).reduce((acc, file) => {
-  if (file.endsWith('.json')) {
-    const resourceName = path.basename(file, '.json'); // Ex.: "genesis"
-    acc[`/${resourceName}`] = jsonServer.router(path.join(dirPath, file));
-  }
-  return acc;
-}, {});
+// Comment out to allow write operations
+const router = jsonServer.router('biblia.json')
 
-// Configura rotas dinâmicas para cada arquivo JSON
-Object.entries(routers).forEach(([route, router]) => {
-  server.use(route, router);
-});
+const middlewares = jsonServer.defaults()
 
-// Reescrita para API
-server.use(
-  jsonServer.rewriter({
+server.use(middlewares)
+// Add this before server.use(router)
+server.use(jsonServer.rewriter({
     '/api/*': '/$1',
-    '/blog/:resource/:id/show': '/:resource/:id',
-  })
-);
-
+    '/blog/:resource/:id/show': '/:resource/:id'
+}))
+server.use(router)
 server.listen(3000, () => {
-  console.log('JSON Server is running with multiple routes');
-});
+    console.log('JSON Server is running')
+})
 
-module.exports = server;
+// Export the Server API
+module.exports = server
